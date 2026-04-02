@@ -1,0 +1,31 @@
+za-nix-bin-atdelete-handler() {
+
+emulate -LR zsh
+setopt extendedglob warncreateglobal typesetsilent noshortloops
+
+if [[ "$1" = plugin ]]; then
+    local type="$1" user="$2" plugin="$3" id_as="$4" dir="${5#%}" hook="$6"
+else
+    local type="$1" url="$2" id_as="$3" dir="${4#%}" hook="$5"
+fi
+
+if (( ! ${+ICE[nix]} )) && [[ ! -f "$dir/.nix-flakeref" ]]; then
+    return 0
+fi
+
+local dirreal="${dir:A}"
+local bin link target
+
+for bin in "$dir"/result/bin/*(N*); do
+    link="$ZPFX/bin/${bin:t}"
+    [[ -L "$link" ]] || continue
+    target=$(readlink "$link") || continue
+    if [[ "$target" == "$dirreal/"* ]]; then
+        command rm -f "$link"
+        +zi-log "{m} {b}nix-bin{rst}: Unlinked {file}${bin:t}{rst}"
+    fi
+done
+
+}
+
+# vim: set expandtab filetype=zsh shiftwidth=4 softtabstop=4 tabstop=4:

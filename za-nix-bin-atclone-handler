@@ -1,0 +1,40 @@
+za-nix-bin-atclone-handler() {
+
+emulate -LR zsh
+setopt extendedglob warncreateglobal typesetsilent noshortloops
+
+if [[ "$1" = plugin ]]; then
+    local type="$1" user="$2" plugin="$3" id_as="$4" dir="${5#%}" hook="$6"
+else
+    local type="$1" url="$2" id_as="$3" dir="${4#%}" hook="$5"
+fi
+
+(( ${+ICE[nix]} )) || return 0
+
+local flakeref="${ICE[nix]}"
+
+if (( ! ${+commands[nix]} )); then
+    +zi-log "{e} {b}nix-bin{rst}: \`nix\` not found in PATH — cannot install {ice}$flakeref{rst}"
+    return 1
+fi
+
++zi-log "{m} {b}nix-bin{rst}: Building {ice}$flakeref{rst}"
+
+command nix build "$flakeref" --out-link "$dir/result"
+local ret=$?
+if (( ret )); then
+    +zi-log "{e} {b}nix-bin{rst}: \`nix build\` failed for {ice}$flakeref{rst}"
+    return $ret
+fi
+
+print -r -- "$flakeref" >! "$dir/.nix-flakeref"
+
+local bin
+for bin in "$dir"/result/bin/*(N*); do
+    command ln -sf "$bin" "$ZPFX/bin/${bin:t}"
+    +zi-log "{m} {b}nix-bin{rst}: Linked {file}${bin:t}{rst}"
+done
+
+}
+
+# vim: set expandtab filetype=zsh shiftwidth=4 softtabstop=4 tabstop=4:

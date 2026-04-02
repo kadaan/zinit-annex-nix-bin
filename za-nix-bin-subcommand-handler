@@ -1,0 +1,38 @@
+za-nix-bin-subcommand-handler() {
+
+emulate -LR zsh
+setopt extendedglob warncreateglobal typesetsilent noshortloops
+
+local plugins_dir="${ZINIT[PLUGINS_DIR]}"
+local -i found=0
+local dir
+
+for dir in "$plugins_dir"/*(N/); do
+    [[ -f "$dir/.nix-flakeref" ]] || continue
+    found=1
+
+    local flakeref
+    flakeref="$(<"$dir/.nix-flakeref")"
+
+    local store_path="<not built>"
+    [[ -L "$dir/result" ]] && store_path=$(readlink "$dir/result")
+
+    local -a bins
+    local bin
+    for bin in "$dir"/result/bin/*(N*); do
+        bins+=("${bin:t}")
+    done
+
+    local plugin_id="${${dir:t}//---//}"
+
+    +zi-log "{m} {b}${plugin_id}{rst}"
+    +zi-log "    flake:  {ice}${flakeref}{rst}"
+    +zi-log "    store:  {file}${store_path}{rst}"
+    +zi-log "    bins:   ${(j:, :)bins}"
+done
+
+(( found )) || +zi-log "{m} {b}nix-bin{rst}: no nix-managed plugins installed"
+
+}
+
+# vim: set expandtab filetype=zsh shiftwidth=4 softtabstop=4 tabstop=4:
