@@ -54,8 +54,12 @@ znix() {
     fi
     local -a extra_ices
     zstyle -a ':zinit:annex:nix-bin' default-ices extra_ices
-    if [[ ! -d "${ZINIT[PLUGINS_DIR]}/${pkg}" ]]; then
-        extra_ices=("${(@)extra_ices:#wait*}")
+    local plugin_dir="${ZINIT[PLUGINS_DIR]}/${pkg}"
+    if [[ ! -d "$plugin_dir" ]]; then
+        # Ensure basic system tools are available for zinit's clone subprocess.
+        # These may be absent early in shell startup before PATH is fully initialized.
+        [[ :$PATH: == *:/usr/bin:* ]] || path=(/usr/bin $path)
+        [[ :$PATH: == *:/bin:* ]]     || path=(/bin $path)
     fi
     zinit ice "${extra_ices[@]}" id-as"${pkg}" nix"${flakeref}"
     zinit load zdharma-continuum/null
