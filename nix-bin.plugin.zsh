@@ -36,9 +36,27 @@ za-nix-bin-null-handler() { :; }
 
 znix() {
     local flakeref="$1"
-    local pkg="${2:-${flakeref##*\#}}"
+    local pkg
+    if [[ -n "$2" ]]; then
+        pkg="$2"
+    else
+        local path="$flakeref"
+        if [[ "$path" == *://* ]]; then
+            path="${path#*://}"   # strip scheme://
+            path="${path#*/}"     # strip host (user@host/)
+        else
+            path="${path#*:}"     # strip scheme: (e.g. path:)
+        fi
+        path="${path#/}"          # strip leading /
+        path="${path%%\?*}"       # strip query string
+        path="${path/\#/-}"       # replace # with -
+        pkg="${path//\//-}"       # replace remaining / with -
+    fi
     local -a extra_ices
     zstyle -a ':zinit:annex:nix-bin' default-ices extra_ices
+    if [[ ! -d "${ZINIT[PLUGINS_DIR]}/${pkg}" ]]; then
+        extra_ices=("${(@)extra_ices:#wait*}")
+    fi
     zinit ice "${extra_ices[@]}" id-as"${pkg}" nix"${flakeref}"
     zinit load zdharma-continuum/null
 }
