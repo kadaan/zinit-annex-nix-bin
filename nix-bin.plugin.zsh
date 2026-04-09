@@ -33,3 +33,12 @@ za-nix-bin-null-handler() { :; }
     subcommand:nix-list \
     za-nix-bin-subcommand-handler \
     za-nix-bin-null-handler
+
+znix() {
+    local flakeref="$1"
+    local pkg="${2:-${flakeref##*\#}}"
+    local -a extra_ices
+    zstyle -a ':zinit:annex:nix-bin' default-ices extra_ices
+    zinit ice "${extra_ices[@]}" id-as"${pkg}" nix"${flakeref}"
+    zinit load zdharma-continuum/null
+}
