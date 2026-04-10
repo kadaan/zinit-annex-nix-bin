@@ -13,14 +13,19 @@ fi
 
 local flakeref="${ICE[nix]}"
 
-if (( ! ${+commands[nix]} )); then
-    +zi-log "{e} {b}nix-bin{rst}: \`nix\` not found in PATH — cannot install {ice}$flakeref{rst}"
+local nix_cmd
+if (( ${+commands[nix]} )); then
+    nix_cmd="${commands[nix]}"
+elif [[ -x /nix/var/nix/profiles/default/bin/nix ]]; then
+    nix_cmd=/nix/var/nix/profiles/default/bin/nix
+else
+    +zi-log "{e} {b}nix-bin{rst}: \`nix\` not found in PATH or /nix/var/nix/profiles/default/bin — cannot install {ice}$flakeref{rst}"
     return 1
 fi
 
 +zi-log "{m} {b}nix-bin{rst}: Building {ice}$flakeref{rst}"
 
-command nix build "$flakeref" --out-link "$dir/result"
+"$nix_cmd" build "$flakeref" --out-link "$dir/result"
 local ret=$?
 if (( ret )); then
     +zi-log "{e} {b}nix-bin{rst}: \`nix build\` failed for {ice}$flakeref{rst}"

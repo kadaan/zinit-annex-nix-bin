@@ -61,20 +61,25 @@ znix() {
         [[ :$PATH: == *:/usr/bin:* ]] || path=(/usr/bin $path)
         [[ :$PATH: == *:/bin:* ]]     || path=(/bin $path)
         if command git clone --quiet https://github.com/zdharma-continuum/null.git "$plugin_dir" 2>/dev/null; then
+            local nix_cmd
             if (( ${+commands[nix]} )); then
-                +zi-log "{m} {b}nix-bin{rst}: Building {ice}$flakeref{rst}"
-                if command nix build "$flakeref" --out-link "$plugin_dir/result"; then
-                    print -r -- "$flakeref" >! "$plugin_dir/.nix-flakeref"
-                    local bin
-                    for bin in "$plugin_dir"/result/bin/*(N*); do
-                        command ln -sf "$bin" "$ZPFX/bin/${bin:t}"
-                        +zi-log "{m} {b}nix-bin{rst}: Linked {file}${bin:t}{rst}"
-                    done
-                else
-                    +zi-log "{e} {b}nix-bin{rst}: \`nix build\` failed for {ice}$flakeref{rst}"
-                fi
+                nix_cmd="${commands[nix]}"
+            elif [[ -x /nix/var/nix/profiles/default/bin/nix ]]; then
+                nix_cmd=/nix/var/nix/profiles/default/bin/nix
             else
-                +zi-log "{e} {b}nix-bin{rst}: \`nix\` not found in PATH — cannot install {ice}$flakeref{rst}"
+                +zi-log "{e} {b}nix-bin{rst}: \`nix\` not found in PATH or /nix/var/nix/profiles/default/bin — cannot install {ice}$flakeref{rst}"
+                return 1
+            fi
+            +zi-log "{m} {b}nix-bin{rst}: Building {ice}$flakeref{rst}"
+            if "$nix_cmd" build "$flakeref" --out-link "$plugin_dir/result"; then
+                print -r -- "$flakeref" >! "$plugin_dir/.nix-flakeref"
+                local bin
+                for bin in "$plugin_dir"/result/bin/*(N*); do
+                    command ln -sf "$bin" "$ZPFX/bin/${bin:t}"
+                    +zi-log "{m} {b}nix-bin{rst}: Linked {file}${bin:t}{rst}"
+                done
+            else
+                +zi-log "{e} {b}nix-bin{rst}: \`nix build\` failed for {ice}$flakeref{rst}"
             fi
         fi
     fi
