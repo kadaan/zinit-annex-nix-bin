@@ -48,9 +48,19 @@ znix() {
             _p="${_p#*:}"     # strip scheme: (e.g. path:)
         fi
         _p="${_p#/}"          # strip leading /
-        _p="${_p%%\?*}"       # strip query string
+        local _dir_suffix=""
+        if [[ "$_p" == *'?'* ]]; then
+            local _query="${_p#*\?}"
+            _p="${_p%%\?*}"
+            if [[ "$_query" == *dir=* ]]; then
+                local _dir="${_query#*dir=}"
+                _dir="${_dir%%&*}"      # stop at next query param
+                _dir="${_dir%%\#*}"     # stop at fragment
+                _dir_suffix="-${_dir//\//-}"
+            fi
+        fi
         _p="${_p/\#/-}"       # replace # with -
-        pkg="${_p//\//-}"     # replace remaining / with -
+        pkg="${_p//\//-}${_dir_suffix}"  # replace remaining / with -
     fi
     local -a extra_ices
     zstyle -a ':zinit:annex:nix-bin' default-ices extra_ices
