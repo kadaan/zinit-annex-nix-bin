@@ -30,6 +30,11 @@ fi
 
 +zi-log "{m} {b}nix-bin{rst}: Updating {ice}$flakeref{rst}"
 
+# Remove existing result symlink before rebuilding — nix resolves the target via
+# realpath() when registering the GC root, which follows the existing symlink into
+# the (read-only) store and silently skips updating the link.
+[[ -L "$dir/result" ]] && command rm -f "$dir/result"
+
 "$nix_cmd" build "$flakeref" --refresh --out-link "$dir/result"
 local ret=$?
 if (( ret )); then
@@ -38,6 +43,12 @@ if (( ret )); then
 fi
 
 +zi-log "{m} {b}nix-bin{rst}: Updated {ice}$flakeref{rst}"
+
+local bin
+for bin in "$dir"/result/bin/*(N*); do
+    command ln -sf "$bin" "$ZPFX/bin/${bin:t}"
+    +zi-log "{m} {b}nix-bin{rst}: Linked {file}${bin:t}{rst}"
+done
 
 }
 
