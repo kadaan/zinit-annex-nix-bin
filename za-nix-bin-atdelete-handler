@@ -16,7 +16,7 @@ fi
 local dirreal="${dir:A}"
 local bin link target
 
-for bin in "$dir"/result/bin/*(N*); do
+for bin in "$dir"/result/bin/*(N*) "$dir"/result/bin/*(N@); do
     link="$ZPFX/bin/${bin:t}"
     [[ -L "$link" ]] || continue
     target=$(readlink "$link") || continue

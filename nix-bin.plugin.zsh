@@ -84,7 +84,7 @@ znix() {
             if "$nix_cmd" build "$flakeref" --out-link "$plugin_dir/result"; then
                 print -r -- "$flakeref" >! "$plugin_dir/.nix-flakeref"
                 local bin
-                for bin in "$plugin_dir"/result/bin/*(N*); do
+                for bin in "$plugin_dir"/result/bin/*(N*) "$plugin_dir"/result/bin/*(N@-*); do
                     command ln -sf "$bin" "$ZPFX/bin/${bin:t}"
                     +zi-log "{m} {b}nix-bin{rst}: Linked {file}${bin:t}{rst}"
                 done

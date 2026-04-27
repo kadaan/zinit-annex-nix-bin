@@ -45,7 +45,7 @@ fi
 +zi-log "{m} {b}nix-bin{rst}: Updated {ice}$flakeref{rst}"
 
 local bin
-for bin in "$dir"/result/bin/*(N*); do
+for bin in "$dir"/result/bin/*(N*) "$dir"/result/bin/*(N@-*); do
     command ln -sf "$bin" "$ZPFX/bin/${bin:t}"
     +zi-log "{m} {b}nix-bin{rst}: Linked {file}${bin:t}{rst}"
 done
